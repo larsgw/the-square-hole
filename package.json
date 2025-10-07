@@ -1,0 +1,25 @@
+{
+  "name": "the-square-hole",
+  "version": "0.0.0",
+  "description": "Linked data validation",
+  "keywords": [
+    "linked",
+    "data",
+    "shex"
+  ],
+  "homepage": "https://github.com/larsgw/the-square-hole#readme",
+  "bugs": {
+    "url": "https://github.com/larsgw/the-square-hole/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larsgw/the-square-hole.git"
+  },
+  "license": "MIT",
+  "author": "Lars Willighagen",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
