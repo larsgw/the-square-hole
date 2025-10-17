@@ -1,4 +1,3 @@
-import type { NamedNode, BlankNode, Literal } from 'n3'
 import type {
   ShapeDecl,
   shapeExpr as ShapeExpr,
@@ -8,8 +7,8 @@ import type {
 } from 'shexj'
 import { notYetImplemented } from './error'
 import type { Validator } from './index'
+import type { Node } from './node'
 
-export type Node = NamedNode | BlankNode | Literal
 type Arc = [Node, Node]
 
 // Boolean expression
