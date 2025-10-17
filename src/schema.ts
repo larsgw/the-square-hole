@@ -26,8 +26,14 @@ export class Validator {
     this._cache = new Map()
   }
 
-  validateNode (node: string, shapeLabel: string): Boolean {
-    return this.validateShapeExpr(n3.DataFactory.namedNode(node), this._resolveShapeExpr(shapeLabel))
+  validateNode (node: string, shapeLabel?: string): Boolean {
+    const shape = shapeLabel ?? this.schema.start
+
+    if (!shape || !this._resolveShapeExpr(shape)) {
+      return false
+    }
+
+    return this.validateShapeExpr(n3.DataFactory.namedNode(node), this._resolveShapeExpr(shape))
   }
 
   validateShapeExpr (node: Node, shape: ShapeExpr|ShapeDecl): Boolean {

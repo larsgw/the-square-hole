@@ -6,7 +6,7 @@ import type {
   tripleExpr as TripleExpr
 } from 'shexj'
 import { notYetImplemented } from './error'
-import type { Validator } from './index'
+import type { Validator } from './schema'
 import type { Node } from './node'
 
 type Arc = [Node, Node]
