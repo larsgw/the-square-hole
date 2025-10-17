@@ -83,13 +83,21 @@ export class ShapeValidator {
       }
     }
 
+    const choices: Array<[Node, BooleanValueSlot[]]> = []
     let product = 1
-    for (const slots of this.itemSlots.values()) {
-      product *= slots.length
+    for (const [item, slots] of this.itemSlots.entries()) {
+      if (slots.length > 1) {
+        product *= slots.length
+        choices.push([item, slots])
+      } else if (slots.length === 1) {
+        this.slotItems.get(slots[0])!.push(item)
+      } else {
+        console.error('unused triple:', this.node.id, this.arcsOut.find(arc => arc[1]===item)![0].id, item.id)
+      }
     }
 
     if (product < 1024) {
-      return this.tryBooleanExpression(expression, this.slotItems, [...this.itemSlots.entries()])
+      return this.tryBooleanExpression(expression, this.slotItems, choices)
     }
 
     console.debug('complexity:', product)
@@ -185,11 +193,6 @@ export class ShapeValidator {
     // TODO early exit after trying to evaluate?
 
     const [item, slots] = items[0]
-
-    if (slots.length === 0) {
-      console.error('unused triple:', this.node.id, this.arcsOut.find(arc => arc[1]===item)![0].id, item.id)
-    }
-
     for (const slot of slots) {
       // TODO don't copy for the last slot (less overhead)
       const newSlotItems = new Map(slotItems)
