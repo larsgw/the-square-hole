@@ -20,50 +20,53 @@ export function validateNodeConstraint (node: Node, shape: NodeConstraint): Bool
       literal: ['Literal'],
     }[shape.nodeKind]
 
-    return expected.includes(node.termType)
+    if (!expected.includes(node.termType)) {
+      return false
+    }
   }
 
-  if (shape.values) {
-    return shape.values.some(value => validateValueConstraint(node, value))
+  if (shape.values && !shape.values.some(value => validateValueConstraint(node, value))) {
+    return false
+  }
+
+  if (shape.length !== undefined && !(node.value.length === shape.length)) {
+    return false
+  }
+  if (shape.minlength !== undefined && !(node.value.length >= shape.minlength)) {
+    return false
+  }
+  if (shape.maxlength !== undefined && !(node.value.length <= shape.maxlength)) {
+    return false
+  }
+  if (shape.pattern !== undefined && !(new RegExp(shape.pattern, shape.flags).test(node.value))) {
+    // TODO configure regex engine
+    return false
   }
 
   const isLiteral = node.termType === 'Literal'
-  if (shape.datatype) {
+  if (shape.datatype && !(isLiteral && node.datatypeString === shape.datatype)) {
     // TODO check casting, validity
-    return isLiteral && node.datatypeString === shape.datatype
-  }
-  if (shape.length !== undefined) {
-    return isLiteral && node.value.length === shape.length
-  }
-  if (shape.minlength !== undefined) {
-    return isLiteral && node.value.length >= shape.minlength
-  }
-  if (shape.maxlength !== undefined) {
-    return isLiteral && node.value.length <= shape.maxlength
-  }
-  if (shape.pattern !== undefined) {
-    // TODO configure regex engine
-    return isLiteral && (new RegExp(shape.pattern, shape.flags)).test(node.value)
+    return false
   }
 
   const isNumeric = isLiteral && NUMERIC_DATATYPES.includes(node.datatypeString)
-  if (shape.mininclusive) {
-    return isNumeric && parseFloat(node.value) >= shape.mininclusive
+  if (shape.mininclusive && !(isNumeric && parseFloat(node.value) >= shape.mininclusive)) {
+    return false
   }
-  if (shape.minexclusive) {
-    return isNumeric && parseFloat(node.value) > shape.minexclusive
+  if (shape.minexclusive && !(isNumeric && parseFloat(node.value) > shape.minexclusive)) {
+    return false
   }
-  if (shape.maxinclusive) {
-    return isNumeric && parseFloat(node.value) <= shape.maxinclusive
+  if (shape.maxinclusive && !(isNumeric && parseFloat(node.value) <= shape.maxinclusive)) {
+    return false
   }
-  if (shape.maxexclusive) {
-    return isNumeric && parseFloat(node.value) < shape.maxexclusive
+  if (shape.maxexclusive && !(isNumeric && parseFloat(node.value) < shape.maxexclusive)) {
+    return false
   }
-  if (shape.totaldigits) {
-    return isNumeric && parseFloat(node.value).toString().replace(/-|\.|e.+$/g, '').length <= shape.totaldigits
+  if (shape.totaldigits && !(isNumeric && parseFloat(node.value).toString().replace(/-|\.|e.+$/g, '').length <= shape.totaldigits)) {
+    return false
   }
-  if (shape.fractiondigits) {
-    return isNumeric && parseFloat(node.value).toString().replace(/^.+\.|e.+$/g, '').length <= shape.fractiondigits
+  if (shape.fractiondigits && !(isNumeric && parseFloat(node.value).toString().replace(/^.+\.|e.+$/g, '').length <= shape.fractiondigits)) {
+    return false
   }
 
   return true

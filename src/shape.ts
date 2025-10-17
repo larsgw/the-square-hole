@@ -31,6 +31,12 @@ interface BooleanValueSlot {
 }
 type BooleanExpression = BooleanAnd | BooleanOr | BooleanValue | BooleanValueSlot
 
+enum Validity {
+  TRUE,
+  FALSE,
+  OPTIONALLY_TRUE
+}
+
 export class ShapeValidator {
   node: Node
   shape: Shape
@@ -62,7 +68,13 @@ export class ShapeValidator {
     this.itemSlots = new Map()
     this.slotItems = new Map()
 
-    // TODO closed/extra
+    if (this.shape.closed === false) {
+      notYetImplemented('non-closed shapes')
+    }
+    if (this.shape.extra) {
+      notYetImplemented('extra')
+    }
+
     const expression = this.buildBooleanExpression()
 
     for (const triple of this.arcsOut) {
@@ -76,11 +88,11 @@ export class ShapeValidator {
       product *= slots.length
     }
 
-    console.debug('complexity:', product)
     if (product < 1024) {
       return this.tryBooleanExpression(expression, this.slotItems, [...this.itemSlots.entries()])
     }
 
+    console.debug('complexity:', product)
     notYetImplemented('different strategy needed')
   }
 
@@ -88,7 +100,9 @@ export class ShapeValidator {
     switch (shape.type) {
       // Descend
       case 'ShapeDecl':
-        // TODO abstract/restricts
+        if (shape.abstract !== undefined || shape.restricts !== undefined) {
+          notYetImplemented('ShapeDecl.abstract/restricts')
+        }
         return this.buildBooleanExpression(shape.shapeExpr)
       case 'ShapeAnd':
         return {
@@ -101,18 +115,24 @@ export class ShapeValidator {
           values: shape.shapeExprs.map(part => this.buildBooleanExpression(this.validator._resolveShapeExpr(part)))
         }
       case 'Shape':
-        // TODO extends
+        if (shape.extends !== undefined) {
+          notYetImplemented('Shape.extends')
+        }
         return shape.expression
-        ? this.buildBooleanExpression(this.validator._resolveTripleExpr(shape.expression))
-        : { type: 'Value', value: true }
+          ? this.buildBooleanExpression(this.validator._resolveTripleExpr(shape.expression))
+          : { type: 'Value', value: true }
       case 'EachOf':
-        // TODO min/max?
+        if (shape.min !== undefined || shape.max !== undefined) {
+          notYetImplemented('EachOf.min/max')
+        }
         return {
           type: 'And',
           values: shape.expressions.map(part => this.buildBooleanExpression(this.validator._resolveTripleExpr(part)))
         }
       case 'OneOf':
-        // TODO min/max?
+        if (shape.min !== undefined || shape.max !== undefined) {
+          notYetImplemented('OneOf.min/max')
+        }
         return {
           type: 'Or',
           values: shape.expressions.map(part => this.buildBooleanExpression(this.validator._resolveTripleExpr(part)))
@@ -137,13 +157,13 @@ export class ShapeValidator {
   addPotentialValues (slot: BooleanValueSlot): void {
     const { inverse = false, valueExpr } = slot.constraint
     const triples = inverse ? this.arcsIn : this.arcsOut
+
     for (const [predicate, value] of triples) {
       if (predicate.value !== slot.constraint.predicate) {
         continue
       }
 
       if (valueExpr && !this.validator.validateShapeExpr(value, this.validator._resolveShapeExpr(valueExpr))) {
-        console.debug('mismatch:', predicate.id, value.id, 'as', valueExpr)
         continue
       }
 
@@ -158,7 +178,8 @@ export class ShapeValidator {
 
   tryBooleanExpression (expression: BooleanExpression, slotItems: Map<BooleanValueSlot, Node[]>, items: Array<[Node, BooleanValueSlot[]]>): Boolean {
     if (items.length === 0) {
-      return this.evaluateBooleanExpression(expression, slotItems)
+      const result = this.evaluateBooleanExpression(expression, slotItems)
+      return result === Validity.TRUE || result === Validity.OPTIONALLY_TRUE
     }
 
     // TODO early exit after trying to evaluate?
@@ -185,77 +206,57 @@ export class ShapeValidator {
     return false
   }
 
-  evaluateBooleanExpression (expression: BooleanExpression, slotItems: Map<BooleanValueSlot, Node[]>): Boolean {
+  evaluateBooleanExpression (expression: BooleanExpression, slotItems: Map<BooleanValueSlot, Node[]>): Validity {
     switch (expression.type) {
-      case 'And': return expression.values.every(part => this.evaluateBooleanExpression(part, slotItems))
-      case 'Or': return expression.values.filter(part => this.evaluateBooleanExpression(part, slotItems)).length === 1
-      case 'Value': return expression.value
+      case 'And': {
+        let optionallyTrue = true
+        for (const part of expression.values) {
+          const partResult = this.evaluateBooleanExpression(part, slotItems)
+          if (partResult === Validity.FALSE) {
+            return Validity.FALSE
+          } else if (partResult === Validity.TRUE) {
+            optionallyTrue = false
+          }
+        }
+        return optionallyTrue ? Validity.OPTIONALLY_TRUE : Validity.TRUE
+      }
+
+      case 'Or': {
+        let trueCount = 0
+        let optionallyTrueCount = 0
+        for (const part of expression.values) {
+          const partResult = this.evaluateBooleanExpression(part, slotItems)
+
+          if (partResult === Validity.TRUE) {
+            trueCount++
+          } else if (partResult === Validity.OPTIONALLY_TRUE) {
+            optionallyTrueCount++
+          }
+        }
+
+        if (trueCount > 1) {
+          return Validity.FALSE
+        } else if (trueCount === 1) {
+          return Validity.TRUE
+        } else if (optionallyTrueCount > 0) {
+          return Validity.OPTIONALLY_TRUE
+        } else {
+          return Validity.FALSE
+        }
+      }
+
+      case 'Value': return expression.value ? Validity.TRUE : Validity.FALSE
       case 'Slot': {
         const valueCount = slotItems.get(expression)!.length
-        if (expression.constraint) {
-          const { min = 1, max = 1 } = expression.constraint
-          return valueCount >= min && (max === -1 || valueCount <= max)
-        } else {
-          return valueCount > 0
+        if (!expression.constraint) {
+          return valueCount > 0 ? Validity.TRUE : Validity.FALSE
         }
+
+        const { min = 1, max = 1 } = expression.constraint
+        const result = valueCount >= min && (max === -1 || valueCount <= max)
+
+        return result ? (valueCount > 0 ? Validity.TRUE : Validity.OPTIONALLY_TRUE) : Validity.FALSE
       }
     }
   }
-
-  /*
-  // _pruneBooleanAnd (expression: BooleanAnd): BooleanExpression {
-  //   const values = []
-  //
-  //   for (const value of expression.values) {
-  //     if (value.type === 'Value' && !value.value) {
-  //       return value
-  //     } else if (value.type === 'Value' && value.value) {
-  //       continue
-  //     } else if (value.type === 'Slot' && value.potentialValues.length === 0) {
-  //       continue
-  //     }
-  //
-  //     values.push(value)
-  //   }
-  //
-  //   if (values.length > 1) {
-  //     return { type: 'And', values }
-  //   } else if (values.length > 0) {
-  //     return values[0]
-  //   } else {
-  //     return { type: 'Value', value: true }
-  //   }
-  // }
-  //
-  // _pruneBooleanOr (expression: BooleanOr): BooleanExpression {
-  //   const values: BooleanExpression[] = []
-  //   let orEmpty = false
-  //
-  //   for (const value of expression.values) {
-  //     if (value.type === 'Value' && !value.value) {
-  //       continue
-  //     } else if (value.type === 'Value' && value.value) {
-  //       orEmpty = true
-  //       continue
-  //     } else if (value.type === 'Slot' && value.potentialValues.length === 0) {
-  //       orEmpty = true
-  //       continue
-  //     }
-  //
-  //     values.push(value)
-  //   }
-  //
-  //   if (orEmpty) {
-  //     values.push({ type: 'Slot', potentialValues: [] })
-  //   }
-  //
-  //   if (values.length > 1) {
-  //     return { type: 'Or', values }
-  //   } else if (values.length > 0) {
-  //     return values[0]
-  //   } else {
-  //     return { type: 'Value', value: false }
-  //   }
-  // }
-  */
 }

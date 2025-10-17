@@ -3,7 +3,7 @@ import path from 'path'
 import n3 from 'n3'
 import shexParser from '@shexjs/parser'
 import type { Quad } from 'n3'
-import type { Schema, ShapeDecl, shapeExpr as ShapeExpr, Shape, tripleExpr as TripleExpr } from 'shexj'
+import type { Schema, ShapeDecl, shapeExpr as ShapeExpr, Shape, tripleExpr as TripleExpr, NodeConstraint } from 'shexj'
 
 import { ShapeValidator } from './shape'
 import { notYetImplemented } from './error'
@@ -13,16 +13,21 @@ interface IndexedSchema extends Schema {
   _index: {
     shapeExprs: Record<string, ShapeDecl>,
     tripleExprs: Record<string, TripleExpr>,
-  };
+  }
 }
+
+type ValidationCache = Map<ShapeDecl|ShapeExpr, Record<string, Boolean>>
 
 export class Validator {
   db: n3.Store
   schema: IndexedSchema
+  _cache: ValidationCache
 
   constructor (schema: IndexedSchema, db: n3.Store) {
     this.schema = schema
     this.db = db
+
+    this._cache = new Map()
   }
 
   validateNode (node: string, shapeLabel: string): Boolean {
@@ -34,22 +39,44 @@ export class Validator {
       case 'ShapeOr': return shape.shapeExprs.some(part => this.validateShapeExpr(node, this._resolveShapeExpr(part)))
       case 'ShapeAnd': return shape.shapeExprs.every(part => this.validateShapeExpr(node, this._resolveShapeExpr(part)))
       case 'ShapeNot': return !this.validateShapeExpr(node, this._resolveShapeExpr(shape.shapeExpr))
-      case 'NodeConstraint': return validateNodeConstraint(node, shape)
+      case 'NodeConstraint': return this.validateNodeConstraint(node, shape)
       case 'Shape': return this.validateShape(node, shape)
-
-      case 'ShapeDecl': {
-        // console.debug('BEGIN', shape.id, node.id)
-        if (shape.abstract !== undefined || shape.restricts !== undefined) {
-          notYetImplemented('abstract/restricts')
-        }
-        const result = this.validateShapeExpr(node, shape.shapeExpr)
-        // console.debug('END  ', shape.id)
-        return result
-      }
+      case 'ShapeDecl': return this.validateShapeDecl(node, shape)
 
       case 'ShapeExternal':
         notYetImplemented('shape type ' + shape.type)
     }
+  }
+
+  validateShapeDecl (node: Node, shape: ShapeDecl): Boolean {
+    if (!this._cache.has(shape)) {
+      this._cache.set(shape, {})
+    }
+
+    const cache = this._cache.get(shape)!
+
+    if (!(node.id in cache)) {
+      if (shape.abstract !== undefined || shape.restricts !== undefined) {
+        notYetImplemented('abstract/restricts')
+      }
+      cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
+    }
+
+    return cache[node.id]
+  }
+
+  validateNodeConstraint (node: Node, constraint: NodeConstraint): Boolean {
+    if (!this._cache.has(constraint)) {
+      this._cache.set(constraint, {})
+    }
+
+    const cache = this._cache.get(constraint)!
+
+    if (!(node.id in cache)) {
+      cache[node.id] = validateNodeConstraint(node, constraint)
+    }
+
+    return cache[node.id]
   }
 
   validateShape (node: Node, shape: Shape): Boolean {
@@ -72,8 +99,13 @@ function getFileUri (filename: string): string {
 
 async function loadSchema (filename: string, base?: string): Promise<IndexedSchema> {
   const file = await fs.readFile(filename, 'utf8')
+  const schema = shexParser.construct(base ?? getFileUri(filename), {}, { index: true }).parse(file) as IndexedSchema
 
-  return shexParser.construct(base ?? getFileUri(filename), {}, { index: true }).parse(file) as IndexedSchema
+  if (schema.imports) {
+    notYetImplemented('schema imports')
+  }
+
+  return schema
 }
 
 async function loadData (filename: string, base?: string): Promise<n3.Store> {
