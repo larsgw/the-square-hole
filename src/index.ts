@@ -1,5 +1,4 @@
 import { promises as fs } from 'fs'
-import path from 'path'
 import n3 from 'n3'
 import shexParser from '@shexjs/parser'
 import shapeMap from 'shape-map'
@@ -9,11 +8,9 @@ import { notYetImplemented } from './error'
 import { Validator, IndexedSchema } from './schema'
 import { resolveShapeMap, ShapeMap } from './shapeMap'
 
-function getFileUri (filename: string): string {
-  return 'file://' + path.resolve(filename)
-}
+export { Validator, resolveShapeMap }
 
-async function loadSchema (filename: string, base: string): Promise<IndexedSchema> {
+export async function loadSchema (filename: string, base: string): Promise<IndexedSchema> {
   const file = await fs.readFile(filename, 'utf8')
   const schema = shexParser.construct(base, {}, { index: true }).parse(file) as IndexedSchema
 
@@ -24,7 +21,7 @@ async function loadSchema (filename: string, base: string): Promise<IndexedSchem
   return schema
 }
 
-async function loadData (filename: string, base: string): Promise<n3.Store> {
+export async function loadData (filename: string, base: string): Promise<n3.Store> {
   const file = await fs.readFile(filename, 'utf8')
   return new Promise(function (resolve, reject) {
     const parser = new n3.Parser({ baseIRI: base, format: 'N-Quads'})
@@ -46,10 +43,8 @@ interface LinkedDataContext {
   prefixes: Record<string, string>
 }
 
-async function loadShapeMap (filename: string, base: string, schemaContext: LinkedDataContext, dataContext: LinkedDataContext): Promise<ShapeMap> {
+export async function loadShapeMap (filename: string, base: string, schemaContext: LinkedDataContext, dataContext: LinkedDataContext): Promise<ShapeMap> {
   const file = await fs.readFile(filename, 'utf8')
   const parser = shapeMap.Parser.construct(base, schemaContext, dataContext)
   return parser.parse(file)
 }
-
-async function main () {
