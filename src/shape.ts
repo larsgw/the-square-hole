@@ -68,18 +68,33 @@ export class ShapeValidator {
     this.itemSlots = new Map()
     this.slotItems = new Map()
 
-    if (this.shape.closed !== true) {
-      notYetImplemented('non-closed shapes')
-    }
-    if (this.shape.extra) {
-      notYetImplemented('extra')
-    }
-
     const expression = this.buildBooleanExpression()
 
-    for (const triple of this.arcsOut) {
-      if (!this.itemSlots.has(triple[1])) {
-        this.itemSlots.set(triple[1], [])
+    const extraSlots: Record<string, BooleanValueSlot> = {}
+    const extra = new Set(this.shape.extra)
+
+    for (const [predicate, item] of this.arcsOut) {
+      if (!this.itemSlots.has(item)) {
+        this.itemSlots.set(item, [])
+      }
+
+      // Add extra slots (unused in expression itself)
+      if (!this.shape.closed || extra.has(predicate.id)) {
+        if (!extraSlots[predicate.id]) {
+          extraSlots[predicate.id] = <BooleanValueSlot>{
+            type: 'Slot',
+            constraint: {
+              type: 'TripleConstraint',
+              predicate: predicate.id
+            },
+            potentialValues: []
+          }
+        }
+
+        const slot = extraSlots[predicate.id]
+        slot.potentialValues.push(item)
+        this.itemSlots.get(item)!.push(slot)
+        this.slotItems.set(slot, [])
       }
     }
 

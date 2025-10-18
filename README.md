@@ -29,8 +29,6 @@ Schemas:
   - (Annotations)
 
 Shapes:
-  - Non-`CLOSED` shapes
-  - Shapes allowing specific `EXTRA` triples
   - Shapes that `EXTENDS` other shapes
   - `ABSTRACT` shapes
   - `EXTERNAL` shapes
