@@ -263,7 +263,7 @@ export class ShapeValidator {
         }
       }
 
-      case 'Value': return expression.value ? Validity.TRUE : Validity.FALSE
+      case 'Value': return expression.value ? Validity.OPTIONALLY_TRUE : Validity.FALSE
       case 'Slot': {
         const valueCount = slotItems.get(expression)!.length
         if (!expression.constraint) {
