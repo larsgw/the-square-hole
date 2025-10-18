@@ -38,7 +38,6 @@ Shapes:
   - `EachOf` or `OneOf` triple sets with `min` and/or `max` (a bit of a problem, to be honest)
 
 Nodes:
-  - Validation of literals with datatype annotation (i.e. the string content)
   - Configuration of RegExp engine
 
 Optimization:
