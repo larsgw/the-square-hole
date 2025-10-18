@@ -33,7 +33,9 @@ export class Validator {
       return false
     }
 
-    return this.validateShapeExpr(n3.DataFactory.namedNode(node), this._resolveShapeExpr(shape))
+    const parsedNode = node.startsWith('_:') ? n3.DataFactory.blankNode(node.slice(2)) : n3.DataFactory.namedNode(node)
+
+    return this.validateShapeExpr(parsedNode, this._resolveShapeExpr(shape))
   }
 
   validateShapeExpr (node: Node, shape: ShapeExpr|ShapeDecl): Boolean {
