@@ -68,7 +68,7 @@ export class ShapeValidator {
     this.itemSlots = new Map()
     this.slotItems = new Map()
 
-    if (this.shape.closed === false) {
+    if (this.shape.closed !== true) {
       notYetImplemented('non-closed shapes')
     }
     if (this.shape.extra) {
