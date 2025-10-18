@@ -21,10 +21,10 @@ export async function loadSchema (filename: string, base: string): Promise<Index
   return schema
 }
 
-export async function loadData (filename: string, base: string): Promise<n3.Store> {
+export async function loadData (filename: string, base: string, format: string = 'N-Quads'): Promise<n3.Store> {
   const file = await fs.readFile(filename, 'utf8')
   return new Promise(function (resolve, reject) {
-    const parser = new n3.Parser({ baseIRI: base, format: 'N-Quads'})
+    const parser = new n3.Parser({ baseIRI: base, format })
     const db = new n3.Store()
     parser.parse(file, function (error: Error, quad: Quad, _prefixes) {
       if (error) {
