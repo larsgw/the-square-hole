@@ -84,12 +84,13 @@ export class ShapeValidator {
     const extra = new Set(this.shape.extra)
 
     for (const [predicate, item] of this.arcsOut) {
-      if (!this.itemSlots.has(item)) {
+      const potentiallyUsed = this.itemSlots.has(item)
+      if (!potentiallyUsed) {
         this.itemSlots.set(item, [])
       }
 
       // Add extra slots (unused in expression itself)
-      if ((this.shape.closed !== true && !this.mentionedPredicates.has(predicate.id)) || extra.has(predicate.id)) {
+      if ((this.shape.closed !== true && !this.mentionedPredicates.has(predicate.id)) || (extra.has(predicate.id) && !potentiallyUsed)) {
         if (!extraSlots[predicate.id]) {
           extraSlots[predicate.id] = <BooleanValueSlot>{
             type: 'Slot',
