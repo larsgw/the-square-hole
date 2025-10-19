@@ -37,6 +37,14 @@ enum Validity {
   OPTIONALLY_TRUE
 }
 
+function copySlotItems (slotItems: Map<BooleanValueSlot, Node[]>): Map<BooleanValueSlot, Node[]> {
+  const copy = new Map()
+  for (const [slot, items] of slotItems) {
+    copy.set(slot, items.slice())
+  }
+  return copy
+}
+
 export class ShapeValidator {
   node: Node
   shape: Shape
@@ -223,7 +231,7 @@ export class ShapeValidator {
     const [item, slots] = items[0]
     for (const slot of slots) {
       // TODO don't copy for the last slot (less overhead)
-      const newSlotItems = new Map(slotItems)
+      const newSlotItems = copySlotItems(slotItems)
       newSlotItems.get(slot)!.push(item)
       // TODO early exit for exceeding max
 
