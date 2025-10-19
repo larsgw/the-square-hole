@@ -27,6 +27,10 @@ export class Validator {
   }
 
   validateNode (node: string, shapeLabel?: string): Boolean {
+    if (this.schema.startActs !== undefined) {
+      notYetImplemented('Semantic Actions')
+    }
+
     const shape = shapeLabel ?? this.schema.start
 
     if (!shape || !this._resolveShapeExpr(shape)) {
@@ -78,6 +82,10 @@ export class Validator {
     const cache = this._cache.get(constraint)!
 
     if (!(node.id in cache)) {
+      if (constraint.semActs !== undefined) {
+        notYetImplemented('Semantic Actions')
+      }
+
       cache[node.id] = validateNodeConstraint(node, constraint)
     }
 
@@ -85,6 +93,10 @@ export class Validator {
   }
 
   validateShape (node: Node, shape: Shape): Boolean {
+    if (shape.semActs !== undefined) {
+      notYetImplemented('Semantic Actions')
+    }
+
     const shapeValidator = new ShapeValidator(node, shape, this)
     return shapeValidator.validate()
   }

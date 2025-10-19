@@ -149,6 +149,9 @@ export class ShapeValidator {
         if (shape.min !== undefined || shape.max !== undefined) {
           notYetImplemented('EachOf.min/max')
         }
+        if (shape.semActs !== undefined) {
+          notYetImplemented('Semantic Actions')
+        }
         return {
           type: 'And',
           values: shape.expressions.map(part => this.buildBooleanExpression(this.validator._resolveTripleExpr(part)))
@@ -156,6 +159,9 @@ export class ShapeValidator {
       case 'OneOf':
         if (shape.min !== undefined || shape.max !== undefined) {
           notYetImplemented('OneOf.min/max')
+        }
+        if (shape.semActs !== undefined) {
+          notYetImplemented('Semantic Actions')
         }
         return {
           type: 'Or',
@@ -167,6 +173,10 @@ export class ShapeValidator {
       case 'ShapeNot':
         return { type: 'Value', value: this.validator.validateShapeExpr(this.node, shape) }
       case 'TripleConstraint': {
+        if (shape.semActs !== undefined) {
+          notYetImplemented('Semantic Actions')
+        }
+
         this.mentionedPredicates.add(shape.predicate)
 
         const slot = <BooleanValueSlot>{ type: 'Slot', constraint: shape, potentialValues: [] }
