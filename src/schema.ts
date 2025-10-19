@@ -63,6 +63,7 @@ export class Validator {
       if (shape.abstract !== undefined || shape.restricts !== undefined) {
         notYetImplemented('abstract/restricts')
       }
+      cache[node.id] = true // handle recursion
       cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
     }
 
