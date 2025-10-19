@@ -26,11 +26,34 @@ const validator = new Validator(schema, data)
 validator.validateNode('http://example.org/subject-1', 'http://example.org/shape-1') // true/false
 ```
 
+### CLI
+
+    NAME
+
+      tsh-validate - validate data against a ShEX schema
+
+    SYNOPSIS
+
+      tsh-validate -x <ShExC> -d <N3> -m <ShapeMap> [-b]
+      tsh-validate -x <ShExC> -d <N3> -n <IRI> [-s <Shape>])
+
+    OPTIONS
+
+      -x, --schema-file            Path to ShExC file
+      -d, --data-file              Path to N-Triples file
+      -m, --shape-map-file         Path to ShapeMap file
+      -n, --node                   IRI of node to validate
+      -s, --shape                  IRI of shape to validate against (omit to validate against START)
+
+      -b, --bail                   Exit after the first ShapeMap entry fails to validate
+      --debug                      Show additional info
+
+      -h, --help                   Display this guidance
+
 ## Not yet implemented
 
 **Major:**
 
-  - CLI
   - Functional solution/error reporting
 
 **Features:**
