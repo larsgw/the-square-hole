@@ -148,11 +148,11 @@ function validateValueConstraint (node: Node, shape: ValueSetValue): Boolean {
     return node.termType === 'Literal' && validateValueRange(node.value, shape)
 
   } else if (shape.type === 'Language') {
-    return node.termType === 'Literal' && node.language === shape.languageTag
+    return node.termType === 'Literal' && node.language !== '' && node.language === shape.languageTag
   } else if (shape.type === 'LanguageStem') {
-    return node.termType === 'Literal' && node.language.startsWith(shape.stem)
+    return node.termType === 'Literal' && node.language !== '' && node.language.startsWith(shape.stem)
   } else if (shape.type === 'LanguageStemRange') {
-    return node.termType === 'Literal' && validateValueRange(node.language, shape)
+    return node.termType === 'Literal' && node.language !== '' && validateValueRange(node.language, shape)
   }
 
   return false
