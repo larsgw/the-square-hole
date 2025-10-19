@@ -68,6 +68,15 @@ function validateDatatype (value: string, datatype: string): Boolean {
   }
 }
 
+function validateLanguageStem (value: string, stem: string): Boolean {
+  if (stem === '') {
+    return true
+  }
+
+  const parts = value.split('-')
+  return stem.split('-').every((part, index) => parts[index] === part)
+}
+
 export function validateNodeConstraint (node: Node, shape: NodeConstraint): Boolean {
   if (shape.nodeKind) {
     const expected = {
@@ -150,18 +159,26 @@ function validateValueConstraint (node: Node, shape: ValueSetValue): Boolean {
   } else if (shape.type === 'Language') {
     return node.termType === 'Literal' && node.language !== '' && node.language === shape.languageTag
   } else if (shape.type === 'LanguageStem') {
-    return node.termType === 'Literal' && node.language !== '' && node.language.startsWith(shape.stem)
+    return node.termType === 'Literal' && node.language !== '' && validateLanguageStem(node.language, shape.stem)
   } else if (shape.type === 'LanguageStemRange') {
-    return node.termType === 'Literal' && node.language !== '' && validateValueRange(node.language, shape)
+    return node.termType === 'Literal' && node.language !== '' && validateLanguageRange(node.language, shape)
   }
 
   return false
 }
 
-function validateValueRange (value: string, shape: LiteralStemRange|IriStemRange|LanguageStemRange): Boolean {
+function validateValueRange (value: string, shape: LiteralStemRange|IriStemRange): Boolean {
   if (typeof shape.stem === 'string' && !value.startsWith(shape.stem)) {
     return false
   }
 
   return !shape.exclusions.some(exclusion => typeof exclusion === 'string' ? value === exclusion : value.startsWith(exclusion.stem))
+}
+
+function validateLanguageRange (value: string, shape: LanguageStemRange): Boolean {
+  if (typeof shape.stem === 'string' && !validateLanguageStem(value, shape.stem)) {
+    return false
+  }
+
+  return !shape.exclusions.some(exclusion => typeof exclusion === 'string' ? value === exclusion : validateLanguageStem(value, exclusion.stem))
 }
