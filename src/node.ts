@@ -42,11 +42,23 @@ const NUMERIC_DATATYPES: Record<string, { parse: (value: string) => number|null,
   'http://www.w3.org/2001/XMLSchema#positiveInteger': { parse: parseInteger, range: [1, Infinity] }
 }
 
-function validateDatatypeConstraint (value: string, datatype: string): Boolean {
+function parseNumericLiteral (value: string, datatype: string): number|null {
   if (datatype in NUMERIC_DATATYPES) {
     const { parse, range: [min, max] } = NUMERIC_DATATYPES[datatype]
     const number = parse(value)
-    return number !== null && (isNaN(number) || (number >= min && number <= max))
+
+    if (number === null || isNaN(number) || (number >= min && number <= max)) {
+      return number
+    }
+  }
+
+  return null
+}
+
+function validateDatatype (value: string, datatype: string): Boolean {
+  if (datatype in NUMERIC_DATATYPES) {
+    const number = parseNumericLiteral(value, datatype)
+    return number !== null
   } else if (datatype === XSD + 'boolean') {
     return value === 'true' || value === 'false' || value === '1' || value === '0'
   } else if (datatype === XSD + 'dateTime') {
@@ -89,12 +101,13 @@ export function validateNodeConstraint (node: Node, shape: NodeConstraint): Bool
   }
 
   const isLiteral = node.termType === 'Literal'
-  if (shape.datatype && !(isLiteral && node.datatypeString === shape.datatype && validateDatatypeConstraint(node.value, shape.datatype))) {
+  if (shape.datatype && !(isLiteral && node.datatypeString === shape.datatype && validateDatatype(node.value, shape.datatype))) {
     return false
   }
 
-  const isNumeric = isLiteral && node.datatypeString in NUMERIC_DATATYPES
-  const numericValue = isNumeric ? NUMERIC_DATATYPES[node.datatypeString].parse(node.value) ?? NaN : NaN
+  const numericValue = isLiteral ? parseNumericLiteral(node.value, node.datatypeString) : null
+  const isNumeric = isLiteral && node.datatypeString in NUMERIC_DATATYPES && numericValue !== null
+  const isDecimal = isNumeric && node.datatypeString !== XSD + 'float' && node.datatypeString !== XSD + 'double'
   if (shape.mininclusive && !(isNumeric && numericValue >= shape.mininclusive)) {
     return false
   }
@@ -107,10 +120,10 @@ export function validateNodeConstraint (node: Node, shape: NodeConstraint): Bool
   if (shape.maxexclusive && !(isNumeric && numericValue < shape.maxexclusive)) {
     return false
   }
-  if (shape.totaldigits && !(isNumeric && numericValue.toString().replace(/-|\.|e.+$/g, '').length <= shape.totaldigits)) {
+  if (shape.totaldigits && !(isDecimal && numericValue.toString().replace(/^[+-]|\.|e.+$/g, '').length <= shape.totaldigits)) {
     return false
   }
-  if (shape.fractiondigits && !(isNumeric && numericValue.toString().replace(/^.+\.|e.+$/g, '').length <= shape.fractiondigits)) {
+  if (shape.fractiondigits && !(isDecimal && (numericValue.toString().match(/\.(\d*[1-9])/)?.[1]?.length ?? 0) <= shape.fractiondigits)) {
     return false
   }
 
