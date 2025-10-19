@@ -12,13 +12,25 @@ This prototypes evaluates all 2000+ records (1.4 million triples) against the fu
 
 Notably though, non-`CLOSED` shapes or shapes allowing specific `EXTRA` triples make it so some or all triples have an additional option, that of being unused, which greatly increases the number of choices to be made. Proper error reporting (i.e. finding _almost_-solutions) leads to similar additional choices for the algorithm: any triple that cannot be used as part of a solution could be discarded (or their object adjusted so that they do fit existing constraints), and missing triples could be "added" instead of leading to early exits.
 
+## Usage
+
+Exact API subject to change. Example usage:
+
+```js
+import { loadSchema, loadData, Validator } from 'the-square-hole'
+
+const schema = await loadSchema('/file/path/to/schema...')
+const data = await loadData('/file/path/to/data...', 'N-Triples')
+const validator = new Validator(schema, data)
+
+validator.validateNode('http://example.org/subject-1', 'http://example.org/shape-1') // true/false
+```
+
 ## Not yet implemented
 
 **Major:**
 
-  - Public API
   - CLI
-  - Tests
   - Functional solution/error reporting
 
 **Features:**
