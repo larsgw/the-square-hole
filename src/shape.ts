@@ -47,6 +47,7 @@ export class ShapeValidator {
 
   itemSlots: Map<Node, BooleanValueSlot[]>
   slotItems: Map<BooleanValueSlot, Node[]>
+  mentionedPredicates: Set<string>
 
   constructor (node: Node, shape: Shape, validator: Validator) {
     this.node = node
@@ -67,6 +68,7 @@ export class ShapeValidator {
   validate (): Boolean {
     this.itemSlots = new Map()
     this.slotItems = new Map()
+    this.mentionedPredicates = new Set()
 
     const expression = this.buildBooleanExpression()
 
@@ -79,7 +81,7 @@ export class ShapeValidator {
       }
 
       // Add extra slots (unused in expression itself)
-      if (!this.shape.closed || extra.has(predicate.id)) {
+      if ((this.shape.closed !== true && !this.mentionedPredicates.has(predicate.id)) || extra.has(predicate.id)) {
         if (!extraSlots[predicate.id]) {
           extraSlots[predicate.id] = <BooleanValueSlot>{
             type: 'Slot',
@@ -89,12 +91,11 @@ export class ShapeValidator {
             },
             potentialValues: []
           }
+          this.slotItems.set(extraSlots[predicate.id], [])
         }
 
-        const slot = extraSlots[predicate.id]
-        slot.potentialValues.push(item)
-        this.itemSlots.get(item)!.push(slot)
-        this.slotItems.set(slot, [])
+        extraSlots[predicate.id].potentialValues.push(item)
+        this.itemSlots.get(item)!.push(extraSlots[predicate.id])
       }
     }
 
@@ -107,7 +108,7 @@ export class ShapeValidator {
       } else if (slots.length === 1) {
         this.slotItems.get(slots[0])!.push(item)
       } else {
-        console.error('unused triple:', this.node.id, this.arcsOut.find(arc => arc[1]===item)![0].id, item.id)
+        return false
       }
     }
 
@@ -166,6 +167,8 @@ export class ShapeValidator {
       case 'ShapeNot':
         return { type: 'Value', value: this.validator.validateShapeExpr(this.node, shape) }
       case 'TripleConstraint': {
+        this.mentionedPredicates.add(shape.predicate)
+
         const slot = <BooleanValueSlot>{ type: 'Slot', constraint: shape, potentialValues: [] }
         this.slotItems.set(slot, [])
         this.addPotentialValues(slot)
