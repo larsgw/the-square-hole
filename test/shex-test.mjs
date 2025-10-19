@@ -1,6 +1,7 @@
 import { suite, test } from 'node:test'
 import { strict as assert } from 'node:assert'
 import path from 'path'
+import url from 'url'
 import { promises as fs } from 'fs'
 import { Validator, loadSchema, loadData } from '../lib/index.js'
 
@@ -11,20 +12,31 @@ const manifest = await fs.readFile(path.join(VALIDATION_ROOT, 'manifest.jsonld')
 const BASE = manifest['@context'][0]['@base']
 const tests = manifest['@graph'][0].entries
 
+function resolveNode (node, base) {
+  if (node.startsWith('_:')) {
+    return node
+  }
+
+  return url.resolve(base, node)
+}
+
 suite('shexTest', async () => {
   for (const validationTest of tests) {
     const schemaFile = path.join(VALIDATION_ROOT, validationTest.action.schema)
+    const schemaBase = path.join(BASE, validationTest.action.schema)
     const dataFile = path.join(VALIDATION_ROOT, validationTest.action.data)
+    const dataBase = path.join(BASE, validationTest.action.data)
     const expectedResult = validationTest['@type'] === 'sht:ValidationTest' ? 'conformant' : 'nonconformant'
 
     await test(validationTest['@id'], async (t) => {
-      const schema = await loadSchema(schemaFile, path.join(BASE, dataFile))
-      const data = await loadData(dataFile, path.join(BASE, dataFile), 'turtle')
+      const schema = await loadSchema(schemaFile, schemaBase)
+      const data = await loadData(dataFile, dataBase, 'turtle')
       const validator = new Validator(schema, data)
+      const shape = validationTest.action.shape && resolveNode(validationTest.action.shape, schemaBase)
+      const focus = resolveNode(validationTest.action.focus, dataBase)
 
-      let actualResult
       try {
-        actualResult = validator.validateNode(validationTest.action.focus, validationTest.action.shape)
+        const actualResult = validator.validateNode(focus, shape)
         assert.equal(actualResult ? 'conformant' : 'nonconformant', expectedResult)
       } catch (error) {
         if (error.message.startsWith('Not yet implemented')) {
