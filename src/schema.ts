@@ -30,6 +30,11 @@ export class Validator {
     if (this.schema.startActs !== undefined) {
       notYetImplemented('Semantic Actions')
     }
+    for (const shape of this.schema.shapes ?? []) {
+      if (shape.abstract !== undefined || shape.restricts !== undefined) {
+        notYetImplemented('abstract/restricts')
+      }
+    }
 
     const shape = shapeLabel ?? this.schema.start
 
@@ -64,9 +69,6 @@ export class Validator {
     const cache = this._cache.get(shape)!
 
     if (!(node.id in cache)) {
-      if (shape.abstract !== undefined || shape.restricts !== undefined) {
-        notYetImplemented('abstract/restricts')
-      }
       cache[node.id] = true // handle recursion
       cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
     }
