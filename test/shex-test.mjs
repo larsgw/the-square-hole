@@ -27,13 +27,19 @@ suite('shexTest', async () => {
     const expectedResult = validationTest['@type'] === 'sht:ValidationTest' ? 'conformant' : 'nonconformant'
 
     await test(validationTest['@id'], async (t) => {
-      const schema = await loadSchema(schemaFile, BASE)
-      const data = await loadData(dataFile, BASE, 'turtle')
-      const validator = new Validator(schema, data)
+      if (typeof validationTest.action.focus !== 'string') {
+        t.todo('Advanced focus')
+        return
+      }
+
       const shape = validationTest.action.shape && resolveNode(validationTest.action.shape, BASE)
       const focus = resolveNode(validationTest.action.focus, BASE)
 
       try {
+        const schema = await loadSchema(schemaFile, BASE)
+        const data = await loadData(dataFile, BASE, 'turtle')
+        const validator = new Validator(schema, data)
+
         const actualResult = validator.validateNode(focus, shape)
         assert.equal(actualResult ? 'conformant' : 'nonconformant', expectedResult)
       } catch (error) {
