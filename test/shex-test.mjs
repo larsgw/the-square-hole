@@ -23,17 +23,15 @@ function resolveNode (node, base) {
 suite('shexTest', async () => {
   for (const validationTest of tests) {
     const schemaFile = path.join(VALIDATION_ROOT, validationTest.action.schema)
-    const schemaBase = path.join(BASE, validationTest.action.schema)
     const dataFile = path.join(VALIDATION_ROOT, validationTest.action.data)
-    const dataBase = path.join(BASE, validationTest.action.data)
     const expectedResult = validationTest['@type'] === 'sht:ValidationTest' ? 'conformant' : 'nonconformant'
 
     await test(validationTest['@id'], async (t) => {
-      const schema = await loadSchema(schemaFile, schemaBase)
-      const data = await loadData(dataFile, dataBase, 'turtle')
+      const schema = await loadSchema(schemaFile, BASE)
+      const data = await loadData(dataFile, BASE, 'turtle')
       const validator = new Validator(schema, data)
-      const shape = validationTest.action.shape && resolveNode(validationTest.action.shape, schemaBase)
-      const focus = resolveNode(validationTest.action.focus, dataBase)
+      const shape = validationTest.action.shape && resolveNode(validationTest.action.shape, BASE)
+      const focus = resolveNode(validationTest.action.focus, BASE)
 
       try {
         const actualResult = validator.validateNode(focus, shape)
