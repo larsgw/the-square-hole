@@ -80,11 +80,11 @@ export class Validator extends EventEmitter {
       cache[node.id] = true // handle recursion
       try {
         cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
-        this.emit('shape:end', { shape, node, conformant: cache[node.id] })
       } catch (error) {
         this.emit('shape:end', { shape, node, conformant: false, error })
         throw error
       }
+      this.emit('shape:end', { shape, node, conformant: cache[node.id] })
     }
 
     return cache[node.id]
