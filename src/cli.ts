@@ -30,15 +30,15 @@ OPTIONS
 
 const { values: args } = util.parseArgs({
   options: {
-    schemaFile: {
+    'schema-file': {
       short: 'x',
       type: 'string'
     },
-    dataFile: {
+    'data-file': {
       short: 'd',
       type: 'string'
     },
-    shapeMapFile: {
+    'shape-map-file': {
       short: 'm',
       type: 'string'
     },
@@ -93,13 +93,13 @@ async function main () {
   if (args.help) {
     console.log(GUIDANCE)
     process.exit(0)
-  } else if (!args.schemaFile || !args.dataFile || (!args.shapeMapFile && !args.node)) {
+  } else if (!args['schema-file'] || !args['data-file'] || (!args['shape-map-file'] && !args.node)) {
     console.log(GUIDANCE)
     process.exit(1)
   }
 
-  const schemaPath = path.resolve(args.schemaFile)
-  const dataPath = path.resolve(args.dataFile)
+  const schemaPath = path.resolve(args['schema-file'])
+  const dataPath = path.resolve(args['data-file'])
   const schemaBase = getFileUri(schemaPath)
   const dataBase = getFileUri(dataPath)
 
@@ -109,8 +109,8 @@ async function main () {
   ])
 
   let focus
-  if (args.shapeMapFile) {
-    const shapeMapPath = path.resolve(args.shapeMapFile)
+  if (args['shape-map-file']) {
+    const shapeMapPath = path.resolve(args['shape-map-file'])
     const shapeMapBase = getFileUri(shapeMapPath)
     const shapeMap = await timePromise('load shapeMap', loadShapeMap(
       shapeMapPath,
