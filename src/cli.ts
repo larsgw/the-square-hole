@@ -23,6 +23,7 @@ OPTIONS
   -s, --shape                  IRI of shape to validate against (omit to validate against START)
 
   -b, --bail                   Exit after the first ShapeMap entry fails to validate
+  -q, --quiet                  Do not print to STDOUT/STDERR
   --debug                      Show additional info
 
   -h, --help                   Display this guidance
@@ -57,6 +58,11 @@ const { values: args } = util.parseArgs({
       default: false
     },
 
+    quiet: {
+      short: 'q',
+      type: 'boolean',
+      default: false
+    },
     debug: {
       type: 'boolean',
       default: false
@@ -74,7 +80,7 @@ function getFileUri (filename: string): string {
 }
 
 async function timePromise<T>(message: string, promise: Promise<T>): Promise<T> {
-  if (!args.debug) {
+  if (args.quiet) {
     return promise
   }
 
@@ -125,15 +131,33 @@ async function main () {
     focus = [{ node: args.node!, shape: args.shape ?? { term: 'START' } }]
   }
 
-  if (args.debug) { console.time('validate') }
+  if (!args.quiet) { console.time('validate') }
   const validator = new Validator(schema, db)
+
+  if (args.debug) {
+    validator.on('shape:start', ({ shape, node }) => {
+      if (shape.type === 'ShapeDecl') {
+        console.group(`<${node.id}>@<${shape.id}>`)
+      }
+    })
+    validator.on('shape:end', ({ shape, conformant }) => {
+      if (shape.type === 'ShapeDecl') {
+        if (conformant) {
+          console.debug('passed')
+        } else {
+          console.error('failed')
+        }
+        console.groupEnd()
+      }
+    })
+  }
+
   let result = true
   for (const pair of focus) {
     const shape = typeof pair.shape === 'string' ? pair.shape : undefined
     const conformant = validator.validate(pair.node, shape)
 
     if (!conformant) {
-      // TODO formatting
       console.error(formatPair(pair), 'failed')
 
       result = false
@@ -142,14 +166,14 @@ async function main () {
         break
       }
     } else {
-      if (args.debug) {
+      if (!args.quiet && args.debug) {
         console.log(formatPair(pair), 'passed')
       }
     }
   }
-  if (args.debug) { console.timeEnd('validate') }
+  if (!args.quiet) { console.timeEnd('validate') }
 
-  if (args.debug) {
+  if (!args.quiet) {
     console.log('Result:', result ? 'passed' : 'failed')
   }
 

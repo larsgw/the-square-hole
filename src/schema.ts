@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events'
 import n3 from 'n3'
 import type { Schema, ShapeDecl, shapeExpr as ShapeExpr, Shape, tripleExpr as TripleExpr, NodeConstraint } from 'shexj'
 
@@ -14,12 +15,14 @@ export interface IndexedSchema extends Schema {
 
 type ValidationCache = Map<ShapeDecl|ShapeExpr, Record<string, boolean>>
 
-export class Validator {
+export class Validator extends EventEmitter {
   db: n3.Store
   schema: IndexedSchema
   _cache: ValidationCache
 
   constructor (schema: IndexedSchema, db: n3.Store) {
+    super()
+
     this.schema = schema
     this.db = db
 
@@ -73,8 +76,15 @@ export class Validator {
     const cache = this._cache.get(shape)!
 
     if (!(node.id in cache)) {
+      this.emit('shape:start', { shape, node })
       cache[node.id] = true // handle recursion
-      cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
+      try {
+        cache[node.id] = this.validateShapeExpr(node, shape.shapeExpr)
+        this.emit('shape:end', { shape, node, conformant: cache[node.id] })
+      } catch (error) {
+        this.emit('shape:end', { shape, node, conformant: false, error })
+        throw error
+      }
     }
 
     return cache[node.id]
