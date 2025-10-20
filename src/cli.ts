@@ -84,6 +84,11 @@ async function timePromise<T>(message: string, promise: Promise<T>): Promise<T> 
   return result
 }
 
+function formatPair (pair: { node: string, shape: string|{ term: string } }): string {
+  // TODO formatting
+  return `<${pair.node}>@${typeof pair.shape === 'string' ? `<${pair.shape}>` : pair.shape.term}`
+}
+
 async function main () {
   if (args.help) {
     console.log(GUIDANCE)
@@ -129,7 +134,7 @@ async function main () {
 
     if (!conformant) {
       // TODO formatting
-      console.error(`<${pair.node}>@<${(pair.shape as any).term ?? pair.shape}> failed`)
+      console.error(formatPair(pair), 'failed')
 
       result = false
 
@@ -138,7 +143,7 @@ async function main () {
       }
     } else {
       if (args.debug) {
-        console.log(`<${pair.node}>@<${(pair.shape as any).term ?? pair.shape}> failed`)
+        console.log(formatPair(pair), 'passed')
       }
     }
   }

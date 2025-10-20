@@ -12,7 +12,7 @@ export interface IndexedSchema extends Schema {
   }
 }
 
-type ValidationCache = Map<ShapeDecl|ShapeExpr, Record<string, Boolean>>
+type ValidationCache = Map<ShapeDecl|ShapeExpr, Record<string, boolean>>
 
 export class Validator {
   db: n3.Store
@@ -26,7 +26,7 @@ export class Validator {
     this._cache = new Map()
   }
 
-  validateNode (node: string, shapeLabel?: string): Boolean {
+  validateNode (node: string, shapeLabel?: string): boolean {
     if (this.schema.startActs !== undefined) {
       notYetImplemented('Semantic Actions')
     }
@@ -47,7 +47,7 @@ export class Validator {
     return this.validateShapeExpr(parsedNode, this._resolveShapeExpr(shape))
   }
 
-  validateShapeExpr (node: Node, shape: ShapeExpr|ShapeDecl): Boolean {
+  validateShapeExpr (node: Node, shape: ShapeExpr|ShapeDecl): boolean {
     switch (shape.type) {
       case 'ShapeOr': return shape.shapeExprs.some(part => this.validateShapeExpr(node, this._resolveShapeExpr(part)))
       case 'ShapeAnd': return shape.shapeExprs.every(part => this.validateShapeExpr(node, this._resolveShapeExpr(part)))
@@ -61,7 +61,7 @@ export class Validator {
     }
   }
 
-  validateShapeDecl (node: Node, shape: ShapeDecl): Boolean {
+  validateShapeDecl (node: Node, shape: ShapeDecl): boolean {
     if (!this._cache.has(shape)) {
       this._cache.set(shape, {})
     }
@@ -76,7 +76,7 @@ export class Validator {
     return cache[node.id]
   }
 
-  validateNodeConstraint (node: Node, constraint: NodeConstraint): Boolean {
+  validateNodeConstraint (node: Node, constraint: NodeConstraint): boolean {
     if (!this._cache.has(constraint)) {
       this._cache.set(constraint, {})
     }
@@ -94,7 +94,7 @@ export class Validator {
     return cache[node.id]
   }
 
-  validateShape (node: Node, shape: Shape): Boolean {
+  validateShape (node: Node, shape: Shape): boolean {
     if (shape.semActs !== undefined) {
       notYetImplemented('Semantic Actions')
     }

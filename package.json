@@ -24,9 +24,10 @@
   },
   "scripts": {
     "test": "node test/index.mjs -r spec",
+    "lint": "eslint src",
     "build": "tsc -d",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
-    "preversion": "npm test",
+    "preversion": "npm run lint && npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
     "prepublishOnly": "npm run build"
   },
@@ -37,10 +38,14 @@
     "shape-map": "^1.0.0-alpha.26"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
     "@types/n3": "^1.26.0",
     "@types/node": "^24.7.0",
     "@types/shexj": "^2.1.7",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
     "conventional-changelog-cli": "^5.0.0",
+    "eslint": "^9.38.0",
     "shex-test": "github:larsgw/shexTest",
     "typescript": "^5.9.3"
   }

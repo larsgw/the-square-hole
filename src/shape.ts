@@ -22,7 +22,7 @@ interface BooleanOr {
 }
 interface BooleanValue {
   type: 'Value';
-  value: Boolean;
+  value: boolean;
 }
 interface BooleanValueSlot {
   type: 'Slot';
@@ -73,7 +73,7 @@ export class ShapeValidator {
     }
   }
 
-  validate (): Boolean {
+  validate (): boolean {
     this.itemSlots = new Map()
     this.slotItems = new Map()
     this.mentionedPredicates = new Set()
@@ -221,7 +221,7 @@ export class ShapeValidator {
     }
   }
 
-  tryBooleanExpression (expression: BooleanExpression, slotItems: Map<BooleanValueSlot, Node[]>, items: Array<[Node, BooleanValueSlot[]]>): Boolean {
+  tryBooleanExpression (expression: BooleanExpression, slotItems: Map<BooleanValueSlot, Node[]>, items: Array<[Node, BooleanValueSlot[]]>): boolean {
     if (items.length === 0) {
       const result = this.evaluateBooleanExpression(expression, slotItems)
       return result === Validity.TRUE || result === Validity.OPTIONALLY_TRUE

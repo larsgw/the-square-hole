@@ -17,7 +17,7 @@ function parseDouble (value: string): number|null {
     case 'NaN': return NaN
     case 'INF': return Infinity
     case '-INF': return -Infinity
-    default: return value.match(/^[+\-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+\-]?[0-9]+)?$/) ? parseFloat(value) : null
+    default: return value.match(/^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/) ? parseFloat(value) : null
   }
 }
 
@@ -30,11 +30,13 @@ const NUMERIC_DATATYPES: Record<string, { parse: (value: string) => number|null,
 
   'http://www.w3.org/2001/XMLSchema#nonPositiveInteger': { parse: parseInteger, range: [-Infinity, 0] },
   'http://www.w3.org/2001/XMLSchema#negativeInteger': { parse: parseInteger, range: [-Infinity, -1] },
+  // eslint-disable-next-line no-loss-of-precision
   'http://www.w3.org/2001/XMLSchema#long': { parse: parseInteger, range: [-9223372036854775808, 9223372036854775807] },
   'http://www.w3.org/2001/XMLSchema#int': { parse: parseInteger, range: [-2147483648, 2147483647] },
   'http://www.w3.org/2001/XMLSchema#short': { parse: parseInteger, range: [-32768, 32767] },
   'http://www.w3.org/2001/XMLSchema#byte': { parse: parseInteger, range: [-128, 127] },
   'http://www.w3.org/2001/XMLSchema#nonNegativeInteger': { parse: parseInteger, range: [0, Infinity] },
+  // eslint-disable-next-line no-loss-of-precision
   'http://www.w3.org/2001/XMLSchema#unsignedLong': { parse: parseInteger, range: [0, 18446744073709551615] },
   'http://www.w3.org/2001/XMLSchema#unsignedInt': { parse: parseInteger, range: [0, 4294967295] },
   'http://www.w3.org/2001/XMLSchema#unsignedShort': { parse: parseInteger, range: [0, 65535] },
@@ -55,7 +57,7 @@ function parseNumericLiteral (value: string, datatype: string): number|null {
   return null
 }
 
-function validateDatatype (value: string, datatype: string): Boolean {
+function validateDatatype (value: string, datatype: string): boolean {
   if (datatype in NUMERIC_DATATYPES) {
     const number = parseNumericLiteral(value, datatype)
     return number !== null
@@ -68,7 +70,7 @@ function validateDatatype (value: string, datatype: string): Boolean {
   }
 }
 
-function validateLanguageStem (value: string, stem: string): Boolean {
+function validateLanguageStem (value: string, stem: string): boolean {
   if (stem === '') {
     return true
   }
@@ -77,7 +79,7 @@ function validateLanguageStem (value: string, stem: string): Boolean {
   return stem.split('-').every((part, index) => parts[index] === part)
 }
 
-export function validateNodeConstraint (node: Node, shape: NodeConstraint): Boolean {
+export function validateNodeConstraint (node: Node, shape: NodeConstraint): boolean {
   if (shape.nodeKind) {
     const expected = {
       iri: ['NamedNode'],
@@ -139,7 +141,7 @@ export function validateNodeConstraint (node: Node, shape: NodeConstraint): Bool
   return true
 }
 
-function validateValueConstraint (node: Node, shape: ValueSetValue): Boolean {
+function validateValueConstraint (node: Node, shape: ValueSetValue): boolean {
   if (typeof shape === 'string') {
     return node.termType === 'NamedNode' && node.value === shape
   } else if ('value' in shape) {
@@ -167,7 +169,7 @@ function validateValueConstraint (node: Node, shape: ValueSetValue): Boolean {
   return false
 }
 
-function validateValueRange (value: string, shape: LiteralStemRange|IriStemRange): Boolean {
+function validateValueRange (value: string, shape: LiteralStemRange|IriStemRange): boolean {
   if (typeof shape.stem === 'string' && !value.startsWith(shape.stem)) {
     return false
   }
@@ -175,7 +177,7 @@ function validateValueRange (value: string, shape: LiteralStemRange|IriStemRange
   return !shape.exclusions.some(exclusion => typeof exclusion === 'string' ? value === exclusion : value.startsWith(exclusion.stem))
 }
 
-function validateLanguageRange (value: string, shape: LanguageStemRange): Boolean {
+function validateLanguageRange (value: string, shape: LanguageStemRange): boolean {
   if (typeof shape.stem === 'string' && !validateLanguageStem(value, shape.stem)) {
     return false
   }
