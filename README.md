@@ -23,7 +23,7 @@ const schema = await loadSchema('/file/path/to/schema...')
 const data = await loadData('/file/path/to/data...', 'N-Triples')
 const validator = new Validator(schema, data)
 
-validator.validateNode('http://example.org/subject-1', 'http://example.org/shape-1') // true/false
+validator.validate('http://example.org/subject-1', 'http://example.org/shape-1') // true/false
 ```
 
 ### CLI

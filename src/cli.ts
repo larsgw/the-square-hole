@@ -130,7 +130,7 @@ async function main () {
   let result = true
   for (const pair of focus) {
     const shape = typeof pair.shape === 'string' ? pair.shape : undefined
-    const conformant = validator.validateNode(pair.node, shape)
+    const conformant = validator.validate(pair.node, shape)
 
     if (!conformant) {
       // TODO formatting

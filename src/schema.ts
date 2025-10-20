@@ -26,7 +26,13 @@ export class Validator {
     this._cache = new Map()
   }
 
-  validateNode (node: string, shapeLabel?: string): boolean {
+  validate (node: string, shapeLabel?: string): boolean {
+    const parsedNode = node.startsWith('_:') ? n3.DataFactory.blankNode(node.slice(2)) : n3.DataFactory.namedNode(node)
+
+    return this.validateNode(parsedNode, shapeLabel)
+  }
+
+  validateNode (node: Node, shapeLabel?: string): boolean {
     if (this.schema.startActs !== undefined) {
       notYetImplemented('Semantic Actions')
     }
@@ -42,9 +48,7 @@ export class Validator {
       return false
     }
 
-    const parsedNode = node.startsWith('_:') ? n3.DataFactory.blankNode(node.slice(2)) : n3.DataFactory.namedNode(node)
-
-    return this.validateShapeExpr(parsedNode, this._resolveShapeExpr(shape))
+    return this.validateShapeExpr(node, this._resolveShapeExpr(shape))
   }
 
   validateShapeExpr (node: Node, shape: ShapeExpr|ShapeDecl): boolean {
