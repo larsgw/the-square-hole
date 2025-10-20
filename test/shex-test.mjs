@@ -46,6 +46,12 @@ suite('shexTest', async () => {
         if (error.message.startsWith('Not yet implemented')) {
           t.todo(error.message)
         } else {
+          console.error('===  SHAPE ===')
+          console.error(`<${validationTest.action.focus}>@<${validationTest.action.shape}>`)
+          console.error('=== SCHEMA ===')
+          console.error(await fs.readFile(schemaFile, 'utf8'))
+          console.error('===  DATA  ===')
+          console.error(await fs.readFile(dataFile, 'utf8'))
           throw error
         }
       }
