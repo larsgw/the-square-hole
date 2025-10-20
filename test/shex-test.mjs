@@ -36,7 +36,7 @@ function resolveNode (node, base) {
 suite('shexTest', async () => {
   for (const validationTest of tests) {
     if (validationTest.status !== 'mf:Approved') {
-      test.skip(validationTest['@id'])
+      test.todo(validationTest['@id'])
       continue
     }
 
