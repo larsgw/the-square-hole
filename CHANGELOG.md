@@ -1,4 +1,13 @@
-# 0.1.0 (2025-10-20)
+## [0.1.1](https://github.com/larsgw/the-square-hole/compare/v0.1.0...v0.1.1) (2025-10-20)
+
+
+### Bug Fixes
+
+* **schema:** fix event emitting ([ac1f432](https://github.com/larsgw/the-square-hole/commit/ac1f4322fb971a5dcf07314ada1b9294ece1add3))
+
+
+
+# [0.1.0](https://github.com/larsgw/the-square-hole/compare/06cfe5f7e4d5496157f9b62d0cd733cc0a4159b2...v0.1.0) (2025-10-20)
 
 
 ### Bug Fixes
